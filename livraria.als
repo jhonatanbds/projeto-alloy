@@ -3,7 +3,12 @@ module livraria
 open util/ordering[Time] as to
 sig Time {} 
 
-sig Armazem{
+one sig Livraria{
+	armaze: Armazem,
+	clientes: set Cliente
+}
+
+one sig Armazem{
 	livros: set Livro->Time,
 	drones: set Drone->Time
 }
@@ -11,11 +16,11 @@ sig Armazem{
 abstract sig Drone {}
 
 sig DroneComum extends Drone{
-	clientesComuns: set ClienteComum
+//	clientesComuns: set ClienteComum  ??
 }
 
 sig DroneEspecial extends Drone {
-	clientesConveniados: set ClienteConveniado
+//	clientesConveniados: set ClienteConveniado  ??
 }
 
 abstract sig Cliente {
@@ -26,7 +31,13 @@ sig ClienteComum extends Cliente {}
 
 sig ClienteConveniado extends Cliente {}
 
-sig Livro {}
+sig Livro {} 
+
+abstract sig Pedido {}
+
+sig PedidoComum extends Pedido {}
+
+sig PedidoEspecial extends Pedido {}
 
 // Operação de compra de livros: O livro sai do armazem para o cliente
 pred compraLivro[a:Armazem, l:Livro, c:Cliente, t,t':Time] {
@@ -47,15 +58,25 @@ fact fatos {
 	
 	// Define que um livro não pode pertencer ao armazem e
 	// a um cliente ao mesmo tempo
-	all l: Livro, c: Cliente, a: Armazem, t: Time |
-		(l in (a.livros).t and l !in (c.livrosComprados).t) or
-		(l !in (a.livros).t and l in (c.livrosComprados).t)
+	all L: Livro, c: Cliente, a: Armazem, t: Time |
+		(L in (a.livros).t and L !in (c.livrosComprados).t) or
+		(L !in (a.livros).t and L in (c.livrosComprados).t)
+	
+	//todo drone deve pertencer ao armazem
+	all d: Drone, a: Armazem, t: Time | d in (a.drones).t 
 
-	#livros > 0
-	#Armazem = 1
-	#DroneEspecial = 2 && #DroneComum = 3
+	//todo livro deve pertencer ao armazem ou a um cliente
+	all c1, c2: Cliente, t: Time | c1 != c2 => 
+		#((c1.livrosComprados).t & (c2.livrosComprados).t) = 0
+
+	#DroneEspecial = 2
+	#DroneComum = 3
+	#livros > 0 //acho que dever ser >= 0
 	#Time <= 5
 	#Cliente > 0
+	#livrosComprados >= 0
+
+		
 	
 }
 
