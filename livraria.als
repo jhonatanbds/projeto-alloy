@@ -1,11 +1,8 @@
 module livraria
 
-//open util/ordering[Time] as to
-//sig Time {} 
-
 one sig Livraria{
 	armaze: Armazem,
-	clientes: set Cliente
+	clientes: some Cliente
 }
 
 one sig Armazem{
@@ -17,13 +14,9 @@ abstract sig Drone {
 	entrega: lone Pedido
 }
 
-sig DroneComum extends Drone{
-	//clientesComuns: set ClienteComum  ??
-}//{#carga <= 3}
+sig DroneComum extends Drone{}
 
-sig DroneEspecial extends Drone {
-//	clientesConveniados: set ClienteConveniado  ??
-}//{#carga <= 5}
+sig DroneEspecial extends Drone {}
 
 abstract sig Cliente {
 	livrosComprados: set Livro
@@ -74,7 +67,7 @@ fact fatos {
 	all dc:DroneComum| dc.entrega = PedidoComum
 	all de:DroneEspecial| de.entrega = PedidoEspecial
 
-	//todo livro deve pertencer ao armazem ou a um cliente
+	//um livro comprado nao pode pertencer a mais de um cliente
 	all c1, c2: Cliente | c1 != c2 => 
 		#(c1.livrosComprados & c2.livrosComprados) = 0
 
@@ -93,24 +86,10 @@ fact fatos {
 	all c:Cliente, livraria:Livraria | c in livraria.clientes
 
 
-	
-
 	#DroneEspecial = 2
-	#DroneComum = 3
-	#Livro > 3
-	#Cliente > 0
-	#livrosComprados > 2
-	#Pedido.conteudo >1
-	
-
-		
-	
+	#DroneComum = 3	
 }
-/*
-pred init [t: Time] {
-	no (Cliente.livrosComprados).t
-}*/
 
 pred show[]{}
 
-run show for 7
+run show for 5
