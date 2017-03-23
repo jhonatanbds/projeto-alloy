@@ -1,4 +1,7 @@
 module livraria
+open util/ordering[Time]
+
+sig Time{}
 
 one sig Livraria{
 	armazem: Armazem,
@@ -19,8 +22,8 @@ sig DroneComum extends Drone{}
 sig DroneEspecial extends Drone {}
 
 abstract sig Cliente {
-	livrosComprados: set Livro,
-	entrega: lone Drone
+	entrega: lone Drone,
+	livrosComprados: set Livro
 }
 
 sig ClienteComum extends Cliente {
@@ -45,8 +48,36 @@ fact traces {
 	all pre: Time-last | let pos = pre.next |
 	some a: Armazem, c: Cliente, l:Livro |
 		compraLivro[a, l, c, pre, pos]
-}*/
+}
 
+pred addLivroDrone[a: Armazem, d:Drone, li:Livro, t,t':Time]{
+	li in (a.livros).t
+	d in (a.drones).t
+	#(d.entrega).t = 0
+	(a.livros).t' = (a.livros).t - li
+	(a.drones).t' = (a.drones).t - d
+	(d.entrega).t' = (d.entrega).t + li
+
+}
+
+pred compraLivro[d:Drone, li:Livro, c:Cliente, t,t':Time]{
+
+	
+
+}
+
+pred init[t:Time]{
+	some(Armazem.livros)
+	no(Drone.entrega).t
+	
+}
+
+fact traces{
+	init[first]
+	all pre:Time - last | let pos = pre.next |
+		some a:Armazem, d:Drone, li: set Livro |
+		addLivroDrone[a,d,li,pre,pos]
+}*/
 
 fact FatosDrones {
 	//Drones comuns só podem carregar até 3 livros
@@ -101,4 +132,4 @@ fact FatosClientes {
 
 pred show[]{}
 
-run show for 15
+run show for 10
