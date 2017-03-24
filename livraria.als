@@ -45,12 +45,17 @@ pred addLivroNoDrone[a:Armazem, l:Livro, c: Cliente, d: Drone, t,t':Time] {
 	
 }
 
-pred despachaDrone[a: Armazem, d: Drone, c: Cliente, t,t':Time] {
+pred despachaDrone[a: Armazem, l: Livro,  d: Drone, c: Cliente, t,t':Time] {
+	l in (a.livros).t
+	l !in (d.carga).t
+	l !in (c.livrosComprados).t
+	(d.carga).t' = (d.carga).t + l
+	(a.livros).t' = (a.livros).t - l
 	d in (a.drones).t
 	d !in (c.entrega).t
-	(c.entrega).t' = (c.entrega).t + d
+	(c.entrega).t' = c.(entrega.t) + d
 	(a.drones).t' = (a.drones).t - d
-	(d in (c.entrega).t') and (#(d.carga).t' > 0)
+//	(d in (c.entrega).t') and (#(d.carga).t' > 0)
 }
 
 pred entregarPedido[d: Drone, c: Cliente, l: Livro, t,t': Time] {
@@ -61,12 +66,26 @@ fact traces {
 	init [first]
 	all pre: Time-last | let pos = pre.next |
 	some a: Armazem, d: Drone, l:Livro, c: Cliente|
-		addLivroNoDrone[a, l, c, d, pre, pos] or
-		despachaDrone[a, d, c, pre, pos]
+		despachaDrone[a, l, d, c, pre, pos] //or
+	//	addLivroNoDrone[a, l, c, d, pre, pos]
 		//entregarPedido[d, c, l , pre, pos]
 
 	all pre: Time-last | let pos = pre.next | all c: Cliente |
 		impedeRoubo[c, pre, pos]
+
+	all pre: Time-last | let pos = pre.next | all d: Drone, a: Armazem | some c: Cliente |
+		despachou[pre, d, c] => entregaERetorna[d, a, c, pre, pos]
+}
+
+pred despachou[t: Time, d: Drone, c: Cliente] {
+	d in c.(entrega.t)
+}
+
+pred entregaERetorna[d: Drone, a: Armazem, c: Cliente, t,t':Time] {
+	c.(livrosComprados.t') = c.(livrosComprados.t) + d.(carga.t)
+	no d.(carga.t')
+	no c.(entrega.t')
+	a.(drones.t') = a.(drones.t) + d
 }
 
 pred impedeRoubo[c: Cliente, t,t': Time] {
@@ -85,7 +104,7 @@ fact FatosLivros {
 	all l: Livro, c1,c2: Cliente, t: Time | (l in (c1.livrosComprados).t) and (l in (c2.livrosComprados).t) => c1 = c2
 
 	//Um livro não pode estar no conteudo de dois drones
-	all l: Livro, d1,d2: Drone , t: Time| (l in (d1.carga).t) and (l in (d2.carga).t) => d1 = d2
+//	all  t: Time, l: Livro | no d1,d2: Drone | (l in d1.(carga.t)) and (l in d2.(carga.t)) and (d1 = d2)
 
 	//Livros estão com clientes, no armazém ou na carga de um drone
 	all l: Livro, t: Time | ((#l.~(livrosComprados.t) > 0) iff not (#l.~(livros.t) > 0) iff not (#l.~(carga.t) > 0)) iff not
@@ -117,8 +136,6 @@ fact FatosDrones {
 
 
 fact FatosClientes {
-	
-
 	//Todo cliente é um cliente da livraria
 	all c:Cliente, livraria:Livraria | c in (livraria.clientes)
 
@@ -130,4 +147,4 @@ fact FatosClientes {
 
 pred show[]{}
 
-run show for 20
+run show for 5
