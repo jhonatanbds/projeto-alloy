@@ -35,7 +35,7 @@ sig ClienteConveniado extends Cliente {}
 sig Livro {} 
 
 // Operação de compra de livros: O livro sai do armazem para o cliente
-// LEMBRAR: adicionar mais de um livro por vez
+
 pred addLivroNoDrone[a:Armazem, l:Livro, c: Cliente, d: Drone, t,t':Time] {
 	l in (a.livros).t
 	l !in (d.carga).t
@@ -58,7 +58,8 @@ pred despachaDrone[a: Armazem, l: Livro,  d: Drone, c: Cliente, t,t':Time] {
 }
 
 pred entregarPedido[d: Drone, c: Cliente, l: Livro, t,t': Time] {
-	d in c.(entrega.t) => l in c.(livrosComprados.t')
+	d in c.(entrega.t) => l in c.(livrosComprados.t') and l !in d.(carga.t')
+
 }
 
 fact traces {
@@ -94,13 +95,14 @@ pred impedeRoubo[c: Cliente, t,t': Time] {
 }
 
 pred init[t:Time] {
-	some(Armazem.livros)
+	some(Armazem.livros).t
 	all d: Drone, a: Armazem |  d in (a.drones).t
 	all d: Drone | #d.(carga.t) = 0
 	all c: Cliente| no c.(livrosComprados.t) and no c.(entrega.t)
 }
 
 fact FatosLivros {
+
 	//Um livro comprado nao pode pertencer a mais de um cliente
 	all l: Livro, c1,c2: Cliente, t: Time | (l in (c1.livrosComprados).t) and (l in (c2.livrosComprados).t) => c1 = c2
 
@@ -110,8 +112,6 @@ fact FatosLivros {
 	//Livros estão com clientes, no armazém ou na carga de um drone
 	all l: Livro, t: Time | ((#l.~(livrosComprados.t) > 0) iff not (#l.~(livros.t) > 0) iff not (#l.~(carga.t) > 0)) iff not
 		    ((#l.~(livrosComprados.t) > 0) and (#l.~(livros.t) > 0) and (#l.~(carga.t) > 0))
-
-
 }
 
 fact FatosDrones {
@@ -131,7 +131,30 @@ fact FatosDrones {
 	#DroneComum = 3	
 }
 
+//Asserts 
+assert livrariaTemClientes{
+	all livraria:Livraria | some clientesDaLivraria[livraria]
+}
 
+assert armazemTemLivros{
+	some a:Armazem| some t:Time | some a.(livros.t)
+
+}
+
+assert armazemTemDrones{
+	all a:Armazem| some t:Time | some dronesDoArmazem[a,t]
+}
+
+assert clientesTemLivros{
+	all c:Cliente| some t:Time| some livrosDoCliente[c,t]
+}
+
+//Descomentar um por um para testar
+
+//check clientesTemLivros for 7
+//check livrariaTemClientes for 5
+//check armazemTemDrones for 5
+//check armazemTemLivros for 5
 
 fact FatosClientes {
 	//Todo cliente é um cliente da livraria
@@ -142,6 +165,19 @@ fact FatosClientes {
 	all c: ClienteConveniado, t: Time| (c.entrega).t in DroneEspecial	
 }
 
+//Funções
+fun livrosDoCliente[c:Cliente,t:Time]: set Livro {
+	c.livrosComprados.t
+
+}
+fun dronesDoArmazem[a:Armazem,t:Time]: set Drone {
+	a.drones.t
+
+}
+fun clientesDaLivraria[l:Livraria]: set Cliente {
+	l.clientes
+
+}
 
 pred show[]{}
 
