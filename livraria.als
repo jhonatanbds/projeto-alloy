@@ -36,6 +36,7 @@ sig Livro {}
 
 
 // Operação de compra de livros: O livro sai do armazem para o cliente
+
 pred compraLivro[a:Armazem, l:Livro, c:Cliente, t,t':Time] {
 	l in (a.livros).t
 	l !in (c.livrosComprados).t
@@ -46,8 +47,9 @@ pred compraLivro[a:Armazem, l:Livro, c:Cliente, t,t':Time] {
 fact traces {
 	init [first]
 	all pre: Time-last | let pos = pre.next |
-	some a: Armazem, c: Cliente, l:Livro |
-		compraLivro[a, l, c, pre, pos]
+	some a: Armazem, c: Cliente, l:Livro, d: Drone|
+		compraLivro[a, l, c, pre, pos] or
+		addLivroDrone[a,d,l,pre,pos]
 }
 
 pred addLivroDrone[a: Armazem, d:Drone, li:Livro, t,t':Time]{
@@ -63,13 +65,6 @@ pred init[t:Time]{
 	some(Armazem.livros)
 	no(Drone.carga).t
 	
-}
-
-fact traces{
-	init[first]
-	all pre:Time - last | let pos = pre.next |
-		some a:Armazem, d:Drone, li: set Livro |
-		addLivroDrone[a,d,li,pre,pos]
 }
 
 fact FatosLivros {
