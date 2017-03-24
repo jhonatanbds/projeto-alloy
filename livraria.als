@@ -64,8 +64,6 @@ pred entregarPedido[d: Drone, c: Cliente, l: Livro, t,t': Time] {
 
 fact traces {
 	init [first]
-//	all pre: Time-last | let pos = pre.next |some a: Armazem, d: Drone, l:Livro, c: Cliente|
-//		despachaDrone[a, l, d, c, pre, pos]
 
 	all pre: Time-last | let pos = pre.next | all c: Cliente |
 		impedeRoubo[c, pre, pos]
@@ -87,7 +85,6 @@ pred despachou[t: Time, d: Drone, c: Cliente] {
 pred entregaERetorna[d: Drone, a: Armazem, c: Cliente, t,t':Time] {
 	c.(livrosComprados.t') = c.(livrosComprados.t) + d.(carga.t)
 	no c.(entrega.t')
-	//a.(drones.t') = a.(drones.t) + d
 }
 
 pred impedeRoubo[c: Cliente, t,t': Time] {
